@@ -8,7 +8,7 @@ All test functions and helpers include type hints and Google-style docstrings.
 
 from typing import Any, Dict, Generator, Optional
 import pytest
-from moto import mock_dynamodb  # type: ignore
+from moto.dynamodb import mock_dynamodb  # type: ignore
 import boto3
 import sys
 from pathlib import Path
