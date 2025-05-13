@@ -5,14 +5,12 @@ These tests use the moto library to mock AWS services, particularly DynamoDB.
 
 import os
 import json
-import sys
 from datetime import datetime, timezone
 from unittest import mock
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 import boto3
 import pytest
-from botocore.exceptions import ClientError
 
 # Handle different moto import styles across different versions
 try:
@@ -490,7 +488,7 @@ class TestLambdaHandler:
     ):
         """Test Lambda handler with INSERT event."""
         # Set up tables first
-        tables = setup_dynamodb_tables()
+        setup_dynamodb_tables()
         dynamodb_resource = boto3.resource("dynamodb")
 
         # Make the mock DynamoDB resource use our boto3 resource
@@ -530,7 +528,7 @@ class TestLambdaHandler:
     ):
         """Test Lambda handler with MODIFY event."""
         # Set up tables first
-        tables = setup_dynamodb_tables()
+        setup_dynamodb_tables()
         dynamodb_resource = boto3.resource("dynamodb")
 
         # Make the mock DynamoDB resource use our boto3 resource
@@ -570,7 +568,7 @@ class TestLambdaHandler:
     ):
         """Test Lambda handler with REMOVE event."""
         # Set up tables first
-        tables = setup_dynamodb_tables()
+        setup_dynamodb_tables()
         dynamodb_resource = boto3.resource("dynamodb")
 
         # Make the mock DynamoDB resource use our boto3 resource
@@ -605,7 +603,7 @@ class TestLambdaHandler:
     ):
         """Test Lambda handler with unknown event type."""
         # Set up tables first
-        tables = setup_dynamodb_tables()
+        setup_dynamodb_tables()
         dynamodb_resource = boto3.resource("dynamodb")
 
         # Make the mock DynamoDB resource use our boto3 resource
