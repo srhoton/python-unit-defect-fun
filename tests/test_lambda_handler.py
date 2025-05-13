@@ -94,7 +94,10 @@ def dynamodb_tables(
     Yields:
         Any: The destination DynamoDB table resource.
     """
-    with mock_dynamodb():
+    # Apply the mock directly without context manager
+    mock_dynamodb()
+    
+    try:
         dynamodb_resource = boto3.resource("dynamodb", region_name="us-east-1")
         # Source table (not used directly, but for completeness)
         dynamodb_resource.create_table(
@@ -127,6 +130,10 @@ def dynamodb_tables(
         mock_boto3_resource.Table.return_value = dest_table
 
         yield dest_table
+    finally:
+        # Ensure we reset the mocks after the test
+        from moto.core import reset_boto3_session
+        reset_boto3_session()
 
 
 def make_ddb_stream_record(
