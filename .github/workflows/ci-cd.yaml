@@ -31,38 +31,32 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .[dev]
-        working-directory: python-unit-defect-fun
 
       - name: Lint with Ruff
         run: |
           ruff check .
           ruff format --check .
-        working-directory: python-unit-defect-fun
 
       - name: Type check with MyPy
         run: mypy src/
-        working-directory: python-unit-defect-fun
 
       - name: Security scan with Bandit
         run: bandit -r src/
-        working-directory: python-unit-defect-fun
 
       - name: Run tests with pytest
         run: pytest
-        working-directory: python-unit-defect-fun
 
       - name: Build Lambda package (zip)
         run: |
           hatch build
           # Create Lambda zip (source only, no dependencies for AWS Lambda)
           cd src && zip -r ../lambda.zip python_unit_defect_fun
-        working-directory: ./python-unit-defect-fun
 
       - name: Upload Lambda zip artifact
         uses: actions/upload-artifact@v4
         with:
           name: lambda-zip
-          path: python-unit-defect-fun/lambda.zip
+          path: lambda.zip
 
   lint-validate-terraform:
     name: Lint & Validate Terraform
@@ -77,21 +71,21 @@ jobs:
 
       - name: Terraform Format
         run: terraform fmt -check -recursive
-        working-directory: python-unit-defect-fun/terraform
+        working-directory: terraform
 
       - name: Terraform Init
         run: terraform init -backend=false
-        working-directory: python-unit-defect-fun/terraform
+        working-directory: terraform
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: python-unit-defect-fun/terraform
+        working-directory: terraform
 
       - name: Lint with tflint
         uses: terraform-linters/setup-tflint@v4
       - name: Run tflint
         run: tflint --init && tflint
-        working-directory: python-unit-defect-fun/terraform
+        working-directory: terraform
 
   deploy:
     name: Deploy Lambda & Terraform
@@ -119,7 +113,7 @@ jobs:
 
       - name: Upload Lambda zip to S3
         run: |
-          aws s3 cp python-unit-defect-fun/lambda.zip s3://unit-defect-lambda-artifacts/python-unit-defect-fun-lambda.zip
+          aws s3 cp lambda.zip s3://unit-defect-lambda-artifacts/python-unit-defect-fun-lambda.zip
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
 
@@ -128,12 +122,12 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: python-unit-defect-fun/terraform
+        working-directory: terraform
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan -var="lambda_package_path=../lambda.zip" -var="lambda_s3_bucket=unit-defect-lambda-artifacts" -var="lambda_s3_key=python-unit-defect-fun-lambda.zip"
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: ./terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: ./terraform
