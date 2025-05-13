@@ -130,7 +130,10 @@ def process_insert(dest_table: Table, record: Dict[str, Any], timestamp: str) ->
     for key_type in ["customer", "location", "account"]:
         pk_sk = build_pk_sk(record, key_type)
         if pk_sk:
-            match = find_matching_record(dest_table, pk_sk["PK"].split("|")[0], key_type)
+            identifier = record.get(f"{key_type}Id")
+            if not identifier:
+                continue
+            match = find_matching_record(dest_table, identifier, key_type)
             if match or key_type == "account":
                 item = {
                     **pk_sk,
