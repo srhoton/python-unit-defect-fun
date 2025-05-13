@@ -17,41 +17,9 @@ locals {
   }
 }
 
-# S3 Bucket for Lambda deployment artifacts
-resource "aws_s3_bucket" "lambda_artifacts" {
+# Reference existing S3 Bucket for Lambda deployment artifacts
+data "aws_s3_bucket" "lambda_artifacts" {
   bucket = var.lambda_s3_bucket
-
-  tags = local.tags
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-resource "aws_s3_bucket_versioning" "lambda_artifacts_versioning" {
-  bucket = aws_s3_bucket.lambda_artifacts.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_artifacts_encryption" {
-  bucket = aws_s3_bucket.lambda_artifacts.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "lambda_artifacts_block" {
-  bucket                  = aws_s3_bucket.lambda_artifacts.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
 }
 
 
@@ -127,7 +95,7 @@ resource "aws_lambda_function" "unit_defect_fun" {
   memory_size   = var.lambda_memory_size
 
   # Lambda deployment package from S3
-  s3_bucket        = aws_s3_bucket.lambda_artifacts.bucket
+  s3_bucket        = data.aws_s3_bucket.lambda_artifacts.bucket
   s3_key           = var.lambda_s3_key
   source_code_hash = filebase64sha256(var.lambda_package_path)
 

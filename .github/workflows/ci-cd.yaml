@@ -108,6 +108,7 @@ jobs:
           hatch build
           # Create Lambda zip (source only, no dependencies for AWS Lambda)
           cd src && zip -r ../lambda.zip python_unit_defect_fun
+          cd .. && ls -la  # List files to verify zip was created successfully
 
       - name: Upload Lambda zip artifact
         uses: actions/upload-artifact@v4
@@ -161,6 +162,12 @@ jobs:
         with:
           name: lambda-zip
           path: python-unit-defect-fun
+      
+      - name: Verify downloaded artifact
+        run: |
+          ls -la python-unit-defect-fun/
+          echo "Verifying zip file integrity..."
+          unzip -t python-unit-defect-fun/lambda.zip | head
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -170,7 +177,7 @@ jobs:
 
       - name: Upload Lambda zip to S3
         run: |
-          aws s3 cp lambda.zip s3://unit-defect-lambda-artifacts/python-unit-defect-fun-lambda.zip
+          aws s3 cp python-unit-defect-fun/lambda.zip s3://unit-defect-lambda-artifacts/python-unit-defect-fun-lambda.zip
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
 
@@ -182,7 +189,7 @@ jobs:
         working-directory: terraform
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan -var="lambda_package_path=../lambda.zip" -var="lambda_s3_bucket=unit-defect-lambda-artifacts" -var="lambda_s3_key=python-unit-defect-fun-lambda.zip"
+        run: terraform plan -out=tfplan -var="lambda_package_path=../python-unit-defect-fun/lambda.zip" -var="lambda_s3_bucket=unit-defect-lambda-artifacts" -var="lambda_s3_key=python-unit-defect-fun-lambda.zip"
         working-directory: ./terraform
 
       - name: Terraform Apply
