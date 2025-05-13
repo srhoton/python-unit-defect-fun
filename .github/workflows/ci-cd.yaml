@@ -31,6 +31,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .[dev]
+          pip list | grep moto  # Verify moto installation
 
       - name: Lint with Ruff
         run: |
@@ -43,8 +44,15 @@ jobs:
       - name: Security scan with Bandit
         run: bandit -r src/
 
+      - name: Verify moto package
+        run: |
+          python -c "from moto import mock_dynamodb; print('mock_dynamodb is available')"
+          echo "Moto package ready for testing"
+
       - name: Run tests with pytest
-        run: pytest
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          pytest -vvs
 
       - name: Build Lambda package (zip)
         run: |
