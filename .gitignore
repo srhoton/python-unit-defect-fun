@@ -157,6 +157,19 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+.terraform.tfstate.backup
+
 # Cython debug symbols
 cython_debug/
 
