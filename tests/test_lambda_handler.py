@@ -8,11 +8,19 @@ All test functions and helpers include type hints and Google-style docstrings.
 
 from typing import Any, Dict, Generator, Optional
 import pytest
-from moto import mock_dynamodb  # type: ignore
 import boto3
 import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+
+# Handle different moto versions
+try:
+    from moto import mock_dynamodb
+except ImportError:
+    try:
+        from moto.dynamodb import mock_dynamodb
+    except ImportError:
+        from moto import mock_aws as mock_dynamodb
 
 # Add parent directory to Python path to make src importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -94,9 +102,17 @@ def dynamodb_tables(
     Yields:
         Any: The destination DynamoDB table resource.
     """
-    # Apply the mock directly without context manager
-    mock_dynamodb()
-
+    # Apply the mock based on which version we imported
+    if 'mock_aws' in str(mock_dynamodb):
+        # If using mock_aws from moto
+        mock = mock_dynamodb("dynamodb")
+        mock.start()
+    else:
+        # If using mock_dynamodb directly
+        mock = mock_dynamodb()
+        if hasattr(mock, 'start'):
+            mock.start()
+    
     try:
         dynamodb_resource = boto3.resource("dynamodb", region_name="us-east-1")
         # Source table (not used directly, but for completeness)
@@ -132,9 +148,19 @@ def dynamodb_tables(
         yield dest_table
     finally:
         # Ensure we reset the mocks after the test
-        from moto.core import reset_boto3_session
-
-        reset_boto3_session()
+        try:
+            if 'mock_aws' in str(mock_dynamodb):
+                mock.stop()
+            else:
+                if hasattr(mock, 'stop'):
+                    mock.stop()
+                else:
+                    from moto.core import reset_boto3_session
+                    reset_boto3_session()
+        except:
+            # Fallback reset method if the above fails
+            import boto3
+            boto3.DEFAULT_SESSION = None
 
 
 def make_ddb_stream_record(
