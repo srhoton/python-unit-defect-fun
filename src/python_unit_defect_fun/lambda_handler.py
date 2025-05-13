@@ -9,6 +9,7 @@ Requires:
 """
 
 import os
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -21,32 +22,37 @@ logger = Logger()
 tracer = Tracer()
 
 dynamodb = boto3.resource("dynamodb")
-ssm = boto3.client("ssm")
-appconfig = boto3.client("appconfigdata")
+appconfigdata = boto3.client("appconfigdata")
+
+# These must be set as Lambda environment variables
+APPCONFIG_APPLICATION_ID = os.environ.get("APPCONFIG_APPLICATION_ID")
+APPCONFIG_ENVIRONMENT_ID = os.environ.get("APPCONFIG_ENVIRONMENT_ID")
+APPCONFIG_CONFIG_PROFILE_ID = os.environ.get("APPCONFIG_CONFIG_PROFILE_ID")
 
 
-def get_appconfig_setting(setting_name: str) -> str:
-    """Fetch a setting from AWS AppConfig via environment variable or fallback to SSM Parameter Store.
-
-    Args:
-        setting_name (str): The name of the setting to fetch.
+def get_appconfig_settings() -> Dict[str, str]:
+    """Fetch configuration from AWS AppConfig using the AppConfigData client.
 
     Returns:
-        str: The value of the setting as a string.
-
-    Raises:
-        RuntimeError: If the setting cannot be found.
+        Dict[str, str]: Dictionary with configuration values.
     """
-    value = os.environ.get(setting_name)
-    if value:
-        return value
+    if not (APPCONFIG_APPLICATION_ID and APPCONFIG_ENVIRONMENT_ID and APPCONFIG_CONFIG_PROFILE_ID):
+        raise RuntimeError("AppConfig environment variables are not set.")
 
-    try:
-        param = ssm.get_parameter(Name=setting_name, WithDecryption=True)
-        return str(param["Parameter"]["Value"])
-    except Exception as exc:
-        logger.error(f"Failed to fetch setting '{setting_name}': {exc}")
-        raise RuntimeError(f"Missing required setting: {setting_name}") from exc
+    # Start configuration session
+    session = appconfigdata.start_configuration_session(
+        ApplicationIdentifier=APPCONFIG_APPLICATION_ID,
+        EnvironmentIdentifier=APPCONFIG_ENVIRONMENT_ID,
+        ConfigurationProfileIdentifier=APPCONFIG_CONFIG_PROFILE_ID,
+    )
+    token = session["InitialConfigurationToken"]
+
+    # Get latest configuration
+    config_response = appconfigdata.get_latest_configuration(ConfigurationToken=token)
+    config_bytes = config_response["Configuration"]
+    config_str = config_bytes.decode("utf-8")
+    config = json.loads(config_str)
+    return config  # type: ignore[no-any-return]
 
 
 def get_table_names() -> Dict[str, str]:
@@ -55,8 +61,9 @@ def get_table_names() -> Dict[str, str]:
     Returns:
         Dict[str, str]: Dictionary with 'source' and 'destination' table names.
     """
-    source_table = get_appconfig_setting("sourceTable")
-    destination_table = get_appconfig_setting("destinationTable")
+    config = get_appconfig_settings()
+    source_table = config["sourceTable"]
+    destination_table = config["destinationTable"]
     return {"source": source_table, "destination": destination_table}
 
 

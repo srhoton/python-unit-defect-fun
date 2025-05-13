@@ -53,24 +53,18 @@ def set_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 
+# Removed mock_get_appconfig_setting fixture since get_appconfig_setting no longer exists.
+
+
 @pytest.fixture
-def mock_get_appconfig_setting():
-    """Mock the get_appconfig_setting function to return test table names."""
-    with patch(
-        "src.python_unit_defect_fun.lambda_handler.get_appconfig_setting"
-    ) as mock_get_setting:
-
-        def side_effect(setting_name):
-            if setting_name == "sourceTable":
-                return TABLE_NAME_SRC
-            elif setting_name == "destinationTable":
-                return TABLE_NAME_DEST
-            else:
-                return "mock-value"
-
-        mock_get_setting.side_effect = side_effect
-        yield mock_get_setting
-
+def mock_get_appconfig_settings():
+    """Mock the get_appconfig_settings function to return test config dict."""
+    with patch("src.python_unit_defect_fun.lambda_handler.get_appconfig_settings") as mock_get_settings:
+        mock_get_settings.return_value = {
+            "sourceTable": TABLE_NAME_SRC,
+            "destinationTable": TABLE_NAME_DEST,
+        }
+        yield mock_get_settings
 
 @pytest.fixture
 def mock_get_table_names():
@@ -90,7 +84,7 @@ def mock_boto3_resource():
 
 @pytest.fixture
 def dynamodb_tables(
-    mock_get_appconfig_setting, mock_get_table_names, mock_boto3_resource
+    mock_get_appconfig_settings, mock_get_table_names, mock_boto3_resource
 ) -> Generator[Any, None, None]:
     """Create and yield mocked DynamoDB tables for testing.
 
