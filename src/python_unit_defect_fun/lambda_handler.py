@@ -48,7 +48,30 @@ def get_appconfig_settings() -> Dict[str, str]:
         raise RuntimeError("AppConfig environment variables are not set.")
 
     # Start configuration session
-    session = appconfigdata.start_configuration_session(
+if not (APPCONFIG_APPLICATION_ID and APPCONFIG_ENVIRONMENT_ID and APPCONFIG_CONFIG_PROFILE_ID):
+        raise RuntimeError("AppConfig environment variables are not set.")
+
+    try:
+        # Start configuration session
+        session = appconfigdata.start_configuration_session(
+            ApplicationIdentifier=APPCONFIG_APPLICATION_ID,
+            EnvironmentIdentifier=APPCONFIG_ENVIRONMENT_ID,
+            ConfigurationProfileIdentifier=APPCONFIG_CONFIG_PROFILE_ID,
+        )
+        token = session["InitialConfigurationToken"]
+
+        # Get latest configuration
+        config_response = appconfigdata.get_latest_configuration(ConfigurationToken=token)
+        config_bytes = config_response["Configuration"]
+        config_str = config_bytes.decode("utf-8")
+        config = json.loads(config_str)
+        return config  # type: ignore[no-any-return]
+    except (ClientError, ConnectionError) as e:
+        logger.error(f"Error fetching AppConfig settings: {str(e)}")
+        raise
+
+
+def get_table_names() -> Dict[str, str]:
         ApplicationIdentifier=APPCONFIG_APPLICATION_ID,
         EnvironmentIdentifier=APPCONFIG_ENVIRONMENT_ID,
         ConfigurationProfileIdentifier=APPCONFIG_CONFIG_PROFILE_ID,
