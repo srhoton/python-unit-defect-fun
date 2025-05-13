@@ -37,13 +37,25 @@ data "aws_iam_policy_document" "lambda_policy" {
       aws_appconfig_configuration_profile.lambda_config_profile.arn
     ]
   }
+  # Allow creation of log groups and streams globally (needed for first invocation)
   statement {
     actions = [
       "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
+      "logs:CreateLogStream"
     ]
     resources = ["arn:aws:logs:*:*:*"]
+  }
+
+  # Allow writing and reading log events only in this Lambda's log group
+  statement {
+    actions = [
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+    resources = [
+      "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.lambda_function_name}:*"
+    ]
   }
 }
 

@@ -53,3 +53,15 @@ variable "lambda_package_path" {
   type        = string
   default     = "./lambda.zip"
 }
+
+variable "lambda_memory_size" {
+  description = "Amount of memory (in MB) to allocate to the Lambda function"
+  type        = number
+  default     = 256
+}
+
+variable "lambda_timeout" {
+  description = "Timeout (in seconds) for the Lambda function"
+  type        = number
+  default     = 30
+}

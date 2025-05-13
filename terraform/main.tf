@@ -85,8 +85,8 @@ resource "aws_lambda_function" "unit_defect_fun" {
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "python_unit_defect_fun.lambda_handler.lambda_handler"
   runtime       = "python3.13"
-  timeout       = 30
-  memory_size   = 256
+  timeout       = var.lambda_timeout
+  memory_size   = var.lambda_memory_size
 
   filename         = var.lambda_package_path
   source_code_hash = filebase64sha256(var.lambda_package_path)
