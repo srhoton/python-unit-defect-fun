@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "python-unit-defect-fun"
+version = "0.1.0"
+description = "AWS Lambda for updating unit information in the defect service using DynamoDB streams and AppConfig."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "AI Agent", email = "agent@example.com" },
+]
+dependencies = [
+    "boto3>=1.34.0",
+    "aws-lambda-powertools>=2.30.0",
+    "typing-extensions>=4.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "bandit",
+    "boto3-stubs[dynamodb,appconfig,lambda]>=1.34.0",
+    "types-boto3",
+    "moto[server]>=4.2.0",
+]
+
+[tool.hatch.version]
+path = "src/python_unit_defect_fun/__init__.py"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+strict_optional = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=src/python_unit_defect_fun --cov-report=term-missing --cov-report=xml"
+testpaths = [
+    "tests",
+]
+
+[tool.bandit]
+skips = ["B101"]
+exclude_dirs = ["tests"]
