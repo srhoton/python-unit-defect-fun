@@ -159,17 +159,18 @@ def process_update(dest_table: Table, record: Dict[str, Any], timestamp: str) ->
         if pk_sk:
             match = find_matching_record(dest_table, pk_sk["PK"], pk_sk["SK"])
             if match:
-                update_expr = "SET "
+                update_parts = []
                 expr_attr_values: Dict[str, Any] = {}
                 expr_attr_names: Dict[str, str] = {}
                 for k, v in record.items():
                     attr_name = f"#{k}"
-                    update_expr += f"{attr_name} = :{k}, "
+                    update_parts.append(f"{attr_name} = :{k}")
                     expr_attr_values[f":{k}"] = v
                     expr_attr_names[attr_name] = k
-                update_expr += "#updatedAt = :updatedAt"
+                update_parts.append("#updatedAt = :updatedAt")
                 expr_attr_values[":updatedAt"] = timestamp
                 expr_attr_names["#updatedAt"] = "updatedAt"
+                update_expr = "SET " + ", ".join(update_parts)
                 dest_table.update_item(
                     Key=pk_sk,
                     UpdateExpression=update_expr,
