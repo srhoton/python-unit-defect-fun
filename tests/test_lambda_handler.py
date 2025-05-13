@@ -6,10 +6,9 @@ without relying directly on moto's functionality, making it compatible with CI/C
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest import mock
 
-import boto3
 import pytest
 
 # This import is included only for CI pipeline compatibility
