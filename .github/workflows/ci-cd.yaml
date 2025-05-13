@@ -97,6 +97,9 @@ jobs:
       - name: Run tests with pytest
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
+          # Set AWS region for boto3
+          export AWS_DEFAULT_REGION=us-east-1
+          export AWS_REGION=us-east-1
           # Run with more verbose output and continue on error
           pytest -vvs || (echo "Tests failed - showing test file" && cat tests/test_lambda_handler.py && exit 1)
 
