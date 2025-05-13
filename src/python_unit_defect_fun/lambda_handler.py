@@ -25,7 +25,15 @@ dynamodb = boto3.resource("dynamodb")
 appconfigdata = boto3.client("appconfigdata")
 
 # These must be set as Lambda environment variables
-APPCONFIG_APPLICATION_ID = os.environ.get("APPCONFIG_APPLICATION_ID")
+appconfigdata = boto3.client("appconfigdata")
+
+# These must be set as Lambda environment variables
+APPCONFIG_APPLICATION_ID = os.environ["APPCONFIG_APPLICATION_ID"]
+APPCONFIG_ENVIRONMENT_ID = os.environ["APPCONFIG_ENVIRONMENT_ID"]
+APPCONFIG_CONFIG_PROFILE_ID = os.environ["APPCONFIG_CONFIG_PROFILE_ID"]
+
+
+def get_appconfig_settings() -> Dict[str, str]:
 APPCONFIG_ENVIRONMENT_ID = os.environ.get("APPCONFIG_ENVIRONMENT_ID")
 APPCONFIG_CONFIG_PROFILE_ID = os.environ.get("APPCONFIG_CONFIG_PROFILE_ID")
 
