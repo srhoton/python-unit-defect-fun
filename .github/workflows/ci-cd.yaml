@@ -31,6 +31,8 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .[dev]
+          # Make sure moto with server feature is installed
+          pip install 'moto[server]>=4.1.0'
           pip list | grep moto  # Verify moto installation
 
       - name: Lint with Ruff
@@ -44,15 +46,59 @@ jobs:
       - name: Security scan with Bandit
         run: bandit -r src/
 
-      - name: Verify moto package
+      - name: Check moto package structure
         run: |
-          python -c "from moto import mock_dynamodb; print('mock_dynamodb is available')"
-          echo "Moto package ready for testing"
+          # Check what mocking capability is available in moto
+          echo "Checking moto package structure..."
+          python -c "import moto; print('Available mock functions:', [f for f in dir(moto) if f.startswith('mock_')])"
+          # Create temporary test file to handle different moto versions
+          cat > detect_moto.py << 'EOF'
+          import sys
+          try:
+              # Try moto 4.x style import (from specific service module)
+              from moto.dynamodb import mock_dynamodb
+              print("MOTO_IMPORT_STYLE=module")
+          except ImportError:
+              try:
+                  # Try moto direct import style
+                  from moto import mock_dynamodb
+                  print("MOTO_IMPORT_STYLE=direct")
+              except ImportError:
+                  # No mock_dynamodb function found
+                  print("MOTO_IMPORT_STYLE=unknown")
+                  sys.exit(1)
+          EOF
+          # Run the detection and store the result
+          python detect_moto.py > moto_style.txt || echo "Failed to detect moto import style"
+          cat moto_style.txt
+          MOTO_STYLE=$(cat moto_style.txt)
+          echo "Detected moto import style: $MOTO_STYLE"
+
+      - name: Update test imports if needed
+        run: |
+          # Get detected moto style
+          MOTO_STYLE=$(cat moto_style.txt || echo "")
+          
+          if [[ "$MOTO_STYLE" == "MOTO_IMPORT_STYLE=module" ]]; then
+            echo "Updating test file for module-style imports"
+            sed -i 's/from moto import mock_dynamodb/from moto.dynamodb import mock_dynamodb/g' tests/test_lambda_handler.py
+          elif [[ "$MOTO_STYLE" == "MOTO_IMPORT_STYLE=unknown" ]]; then
+            echo "Neither import style worked, using alternative mock approach"
+            # This is a fallback if both import styles failed
+            sed -i 's/from moto import mock_dynamodb/from moto import mock_aws/g' tests/test_lambda_handler.py
+            sed -i 's/with mock_dynamodb()/with mock_aws("dynamodb")/g' tests/test_lambda_handler.py
+          else
+            echo "Using direct import style (from moto import mock_dynamodb)"
+          fi
+          
+          # Show the current import being used
+          grep -n "mock_" tests/test_lambda_handler.py
 
       - name: Run tests with pytest
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          pytest -vvs
+          # Run with more verbose output and continue on error
+          pytest -vvs || (echo "Tests failed - showing test file" && cat tests/test_lambda_handler.py && exit 1)
 
       - name: Build Lambda package (zip)
         run: |
