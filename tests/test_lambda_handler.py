@@ -59,12 +59,15 @@ def set_env(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def mock_get_appconfig_settings():
     """Mock the get_appconfig_settings function to return test config dict."""
-    with patch("src.python_unit_defect_fun.lambda_handler.get_appconfig_settings") as mock_get_settings:
+    with patch(
+        "src.python_unit_defect_fun.lambda_handler.get_appconfig_settings"
+    ) as mock_get_settings:
         mock_get_settings.return_value = {
             "sourceTable": TABLE_NAME_SRC,
             "destinationTable": TABLE_NAME_DEST,
         }
         yield mock_get_settings
+
 
 @pytest.fixture
 def mock_get_table_names():
