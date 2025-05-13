@@ -96,7 +96,7 @@ def dynamodb_tables(
     """
     # Apply the mock directly without context manager
     mock_dynamodb()
-    
+
     try:
         dynamodb_resource = boto3.resource("dynamodb", region_name="us-east-1")
         # Source table (not used directly, but for completeness)
@@ -133,6 +133,7 @@ def dynamodb_tables(
     finally:
         # Ensure we reset the mocks after the test
         from moto.core import reset_boto3_session
+
         reset_boto3_session()
 
 
