@@ -31,25 +31,25 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .[dev]
-        working-directory: ./python-unit-defect-fun
+        working-directory: python-unit-defect-fun
 
       - name: Lint with Ruff
         run: |
           ruff check .
           ruff format --check .
-        working-directory: ./python-unit-defect-fun
+        working-directory: python-unit-defect-fun
 
       - name: Type check with MyPy
         run: mypy src/
-        working-directory: ./python-unit-defect-fun
+        working-directory: python-unit-defect-fun
 
       - name: Security scan with Bandit
         run: bandit -r src/
-        working-directory: ./python-unit-defect-fun
+        working-directory: python-unit-defect-fun
 
       - name: Run tests with pytest
         run: pytest
-        working-directory: ./python-unit-defect-fun
+        working-directory: python-unit-defect-fun
 
       - name: Build Lambda package (zip)
         run: |
@@ -77,21 +77,21 @@ jobs:
 
       - name: Terraform Format
         run: terraform fmt -check -recursive
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: python-unit-defect-fun/terraform
 
       - name: Terraform Init
         run: terraform init -backend=false
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: python-unit-defect-fun/terraform
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: python-unit-defect-fun/terraform
 
       - name: Lint with tflint
         uses: terraform-linters/setup-tflint@v4
       - name: Run tflint
         run: tflint --init && tflint
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: python-unit-defect-fun/terraform
 
   deploy:
     name: Deploy Lambda & Terraform
@@ -128,7 +128,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./python-unit-defect-fun/terraform
+        working-directory: python-unit-defect-fun/terraform
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan -var="lambda_package_path=../lambda.zip" -var="lambda_s3_bucket=unit-defect-lambda-artifacts" -var="lambda_s3_key=python-unit-defect-fun-lambda.zip"
