@@ -52,7 +52,7 @@ resource "aws_appconfig_configuration_profile" "lambda_config_profile" {
 # AppConfig Hosted Configuration Version
 resource "aws_appconfig_hosted_configuration_version" "lambda_config_version" {
   application_id           = aws_appconfig_application.lambda_app.id
-  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.id
+  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.configuration_profile_id
   content_type             = "application/json"
   description              = "Initial config for Lambda"
   content = jsonencode({
