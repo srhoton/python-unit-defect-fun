@@ -8,7 +8,7 @@ All test functions and helpers include type hints and Google-style docstrings.
 
 from typing import Any, Dict, Generator, Optional
 import pytest
-from moto.dynamodb import mock_dynamodb  # type: ignore
+from moto import mock_aws  # type: ignore
 import boto3
 import sys
 from pathlib import Path
@@ -94,7 +94,7 @@ def dynamodb_tables(
     Yields:
         Any: The destination DynamoDB table resource.
     """
-    with mock_dynamodb():
+    with mock_aws("dynamodb"):
         dynamodb_resource = boto3.resource("dynamodb", region_name="us-east-1")
         # Source table (not used directly, but for completeness)
         dynamodb_resource.create_table(
