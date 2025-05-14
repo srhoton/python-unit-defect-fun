@@ -76,7 +76,7 @@ resource "aws_appconfig_deployment_strategy" "quick" {
 resource "aws_appconfig_deployment" "lambda_config_deployment" {
   application_id           = aws_appconfig_application.lambda_app.id
   environment_id           = aws_appconfig_environment.lambda_env.environment_id
-  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.id
+  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.configuration_profile_id
   configuration_version    = aws_appconfig_hosted_configuration_version.lambda_config_version.version_number
   deployment_strategy_id   = aws_appconfig_deployment_strategy.quick.id
   description              = "Deploy Lambda config to AppConfig environment"
