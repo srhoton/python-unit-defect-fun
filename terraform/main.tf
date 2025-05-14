@@ -2,6 +2,7 @@
 # - AppConfig for Lambda configuration
 # - DynamoDB tables (source and destination)
 # - Lambda function deployment
+# - S3 bucket for Lambda artifacts
 
 
 
@@ -14,6 +15,11 @@ locals {
     ManagedBy   = "Terraform"
     Owner       = var.owner
   }
+}
+
+# Reference existing S3 Bucket for Lambda deployment artifacts
+data "aws_s3_bucket" "lambda_artifacts" {
+  bucket = var.lambda_s3_bucket
 }
 
 
@@ -46,7 +52,7 @@ resource "aws_appconfig_configuration_profile" "lambda_config_profile" {
 # AppConfig Hosted Configuration Version
 resource "aws_appconfig_hosted_configuration_version" "lambda_config_version" {
   application_id           = aws_appconfig_application.lambda_app.id
-  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.id
+  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.configuration_profile_id
   content_type             = "application/json"
   description              = "Initial config for Lambda"
   content = jsonencode({
@@ -70,7 +76,7 @@ resource "aws_appconfig_deployment_strategy" "quick" {
 resource "aws_appconfig_deployment" "lambda_config_deployment" {
   application_id           = aws_appconfig_application.lambda_app.id
   environment_id           = aws_appconfig_environment.lambda_env.environment_id
-  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.id
+  configuration_profile_id = aws_appconfig_configuration_profile.lambda_config_profile.configuration_profile_id
   configuration_version    = aws_appconfig_hosted_configuration_version.lambda_config_version.version_number
   deployment_strategy_id   = aws_appconfig_deployment_strategy.quick.id
   description              = "Deploy Lambda config to AppConfig environment"
@@ -88,7 +94,9 @@ resource "aws_lambda_function" "unit_defect_fun" {
   timeout       = var.lambda_timeout
   memory_size   = var.lambda_memory_size
 
-  filename         = var.lambda_package_path
+  # Lambda deployment package from S3
+  s3_bucket        = data.aws_s3_bucket.lambda_artifacts.bucket
+  s3_key           = var.lambda_s3_key
   source_code_hash = filebase64sha256(var.lambda_package_path)
 
   environment {

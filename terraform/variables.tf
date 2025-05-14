@@ -37,7 +37,7 @@ variable "lambda_function_name" {
 }
 
 variable "lambda_s3_bucket" {
-  description = "S3 bucket for Lambda deployment package"
+  description = "Name of existing S3 bucket for Lambda deployment package"
   type        = string
   default     = "unit-defect-lambda-artifacts"
 }
